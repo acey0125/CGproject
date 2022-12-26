@@ -1,0 +1,6 @@
+3ds max 2019
+vray next
+poly 15872
+verts 16380
+5 piece 2000x2000 render
+2 piece 2000x2000 wireframe render
