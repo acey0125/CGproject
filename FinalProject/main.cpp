@@ -5,6 +5,7 @@ Final project for computer graphics class 2022 autumn
 #include "Model.h"
 #include "Camera.h"
 #include "ShadowAndTex.h"
+#include "VideoRecorder.h"
 #include <string>
 
 #include "imgui/imgui.h"
@@ -47,6 +48,8 @@ glm::vec3 rotate1 = { -90,0.0,90 };
 glm::vec3 scale1 = { 1.0,1.0,1.0 };
 glm::vec3 rotate2 = { -90,0.0,90 };
 glm::vec3 scale2 = { 1.0,1.0,1.0 };
+glm::vec3 rotate3 = { -90,0.0,90 };
+glm::vec3 scale3 = { 0.2,0.2,0.2 };
 
 GLdouble modelview[16];
 GLdouble projection[16];
@@ -58,9 +61,16 @@ bool Iscubic = true;
 bool Istai = true;
 bool Isball = true;
 bool firstMouse = true;
+bool isRecording = false;
+bool isRecordOver = false;
+int Isfly = 0;
+int choose = 0;
 float lastX = 0, lastY = 0;
 int shadowMapResolution = 1024;   
-float cameraSpeed = 0.035f;
+float cameraSpeed = 0.5f;
+float upspeed = 0.0f;
+float downspeed = -1.0f;
+int vcounter = 0;
 int counter0 = 0;
 int counter1 = 0;
 int counter2 = 0;
@@ -126,10 +136,42 @@ bool SnapScreen(int width, int height, const char* file)
     fclose(fp);
     return true;
 }
+
+VideoRecorder recorder;
+void idle() {
+    if (!isRecordOver && isRecording)
+    {// 开始录像
+        isRecordOver = isRecording;
+        recorder.RecordInit(60, WindowWidth, WindowHeight, "record.mp4");
+    }
+    else if (isRecordOver && isRecording)
+    {// 录像
+        recorder.GrabFrame();
+    }
+    else if (isRecordOver && !isRecording)
+    {// 结束录像
+        isRecordOver = isRecording;
+        recorder.Finish();
+    }
+}
+
 void MoveView()
 {
     if (glfwGetKey(m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(m_Window, true);
+    if (glfwGetKey(m_Window, GLFW_KEY_V) == GLFW_PRESS)
+    {
+        if (vcounter > 10)
+        {        
+            isRecording = !isRecording;
+            vcounter = 0;
+        }
+        else vcounter++;
+    }
+    if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        upspeed = 5.0f;
+    }
     //相机位置
     if (glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS)
     {
@@ -185,7 +227,7 @@ void MoveView()
 
     if (glfwGetKey(m_Window, GLFW_KEY_N) == GLFW_PRESS)
     {
-        if (counter0 > 50)
+        if (counter0 > 20)
         {
             models[0].show = !models[0].show;
             models[1].show = !models[1].show;
@@ -196,7 +238,7 @@ void MoveView()
 
     if (glfwGetKey(m_Window, GLFW_KEY_M) == GLFW_PRESS)
     {
-        if (counter1 > 50)
+        if (counter1 > 20)
         {
             models[2].show = !models[2].show;
             models[3].show = !models[3].show;
@@ -206,7 +248,7 @@ void MoveView()
     }
     if (glfwGetKey(m_Window, GLFW_KEY_B) == GLFW_PRESS)
     {
-        if (counter2 > 50)
+        if (counter2 > 20)
         {
             models[6].show = !models[6].show;
             models[7].show = !models[7].show;
@@ -266,6 +308,7 @@ void Initialization()
     goal.translate = glm::vec3(2.5, 0, 0);
     goal.rotate = glm::vec3(-90, 0, 90);
     goal.scale = glm::vec3(0.2, 0.2, 0.2);
+    goal.show = false;
     goal.load("models/goal/goal/goal.obj");
     models.push_back(goal);
 
@@ -291,21 +334,90 @@ void Initialization()
     Model vlight = Model(8);
     vlight.translate = glm::vec3(1, 0, -1);
     vlight.rotate = glm::vec3(225, 0, 0);
-    vlight.scale = glm::vec3(0.03, 0.03, 0.03);
-    vlight.load("models/camera/camera.obj");
+    vlight.scale = glm::vec3(0.3, 0.3, 0.3);
+    vlight.load("models/camera/Sun.obj");
     models.push_back(vlight);
 
+    //建筑1
+    Model b1 = Model(11);
+    b1.translate = glm::vec3(0, 0, 45);
+    b1.scale = glm::vec3(0.8, 0.8, 0.8);
+    b1.load("models/building-obj/obj/Residential Buildings 004.obj");
+    b1.show = true;
+    models.push_back(b1);
+    //建筑2
+    Model b2 = Model(12);
+    b2.translate = glm::vec3(20, 0, 45);
+    b2.scale = glm::vec3(0.8, 0.8, 0.8);
+    b2.load("models/building-obj/obj/Residential Buildings 010.obj");
+    b2.show = true;
+    models.push_back(b2);
+    //建筑3
+    Model b3 = Model(13);
+    b3.translate = glm::vec3(-20, 0, 45);
+    b3.scale = glm::vec3(0.8, 0.8, 0.8);
+    b3.load("models/building-obj/obj/Residential Buildings 003.obj");
+    b3.show = true;
+    models.push_back(b3);
+    //建筑4
+    Model b4 = Model(14);
+    b4.translate = glm::vec3(20, 1.5, 90);
+    b4.scale = glm::vec3(0.8, 0.8, 0.8);
+    b4.load("models/building-obj/obj/Residential Buildings 001.obj");
+    b4.show = true;
+    models.push_back(b4);
 
+    //建筑5
+    Model b5 = Model(15);
+    b5.translate = glm::vec3(0, 1.5, 90);
+    b5.scale = glm::vec3(0.8, 0.8, 0.8);
+    b5.load("models/building-obj/obj/Residential Buildings 007.obj");
+    b5.show = true;
+    models.push_back(b5);
 
+    //建筑6
+    Model b6 = Model(16);
+    b6.translate = glm::vec3(-20, 0.5, 90);
+    b6.scale = glm::vec3(0.8, 0.8, 0.8);
+    b6.load("models/building-obj/obj/Residential Buildings 002.obj");
+    b6.show = true;
+    models.push_back(b6);
 
+    //外圈树1
+    Model ltree1 = Model(17);
+    ltree1.translate = glm::vec3(30, -0.4, 50);
+    ltree1.scale = glm::vec3(0.0025, 0.0025, 0.0025);
+    ltree1.load("models/tree/tree02.obj");
+    models.push_back(ltree1);
 
+    //外圈树2
+    Model rtree1 = Model(18);
+    rtree1.translate = glm::vec3(-30, -0.4, 50);
+    rtree1.scale = glm::vec3(0.0025, 0.0025, 0.0025);
+    rtree1.load("models/tree/tree02.obj");
+    models.push_back(rtree1);
 
+    //植物1
+    Model plant1 = Model(19);
+    plant1.translate = glm::vec3(10, 0, 90);
+    plant1.scale = glm::vec3(0.015, 0.015, 0.015);
+    plant1.load("models/plant/3d-model.obj");
+    models.push_back(plant1);
 
+    //植物2
+    Model plant2 = Model(20);
+    plant2.translate = glm::vec3(-10, 1, 90);
+    plant2.scale = glm::vec3(0.5, 0.5, 0.5);
+    plant2.load("models/plant/indoor plant_02.obj");
+    models.push_back(plant2);
 
-
-
-
-
+    ////车
+    Model car = Model(22);
+    car.rotate = glm::vec3(0, 90, 0);
+    car.translate = glm::vec3(20, 0, 20);
+    car.scale = glm::vec3(2.0, 2.0, 2.0);
+    car.load("models/car/car.obj");
+    models.push_back(car);
 
     //天空盒正方体
     Mesh cube;
@@ -332,7 +444,7 @@ void Initialization()
     shadowCamera.right = 20;
     shadowCamera.bottom = -20;
     shadowCamera.top = 20;
-    shadowCamera.position = glm::vec3(0, 15, 15);
+    shadowCamera.position = glm::vec3(0, 45, 15);
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glGenFramebuffers(1, &shadowMapFBO);
     //阴影纹理
@@ -358,15 +470,31 @@ void display()
 {
     while (!glfwWindowShouldClose(m_Window))
     {
-       
+        if (Isfly == 1)
+        {
+            float allspeed = upspeed + downspeed;
+            camera.position.y += allspeed;
+            if (upspeed > 0)
+                upspeed -= 1.5f;
+            if (camera.position.y < 5)
+                camera.position.y = 5;
+       }
+        else
+        {
+            upspeed = 0.0f;
+        }
         Model cube = Model(9);
         if (Iscubic == true)
             tmpMatrix = movMatrix;
         cube.translate = glm::vec3(5, 2, 2) + tmpMatrix;
         cube.rotate = rotate1;
         cube.scale = scale1;
-        cube.load("models/basic/cube.obj");
-        models.push_back(cube);
+        if (Iscubic != true)
+        {
+            cube.load("models/basic/cube.obj");
+            models.push_back(cube);
+        }
+
 
         Model tai = Model(10);
         if (Istai == true)
@@ -374,8 +502,24 @@ void display()
         tai.translate = glm::vec3(5, 2, 0) + tmpMatrix;
         tai.rotate = rotate2;
         tai.scale = scale2;
-        tai.load("models/basic/tai.obj");
-        models.push_back(tai);
+        if (Istai != true)
+        {
+            tai.load("models/basic/tai.obj");
+            models.push_back(tai);
+        }
+
+
+        Model ball = Model(21);
+        if (Isball == true)
+            tmpMatrix = movMatrix;
+        ball.translate = glm::vec3(5, 2, 0) + tmpMatrix;
+        ball.rotate = rotate3;
+        ball.scale = scale3;
+        if (Isball != true)
+        {
+            ball.load("models/basic/Sun.obj");
+            models.push_back(ball);
+        }
 
 
 
@@ -384,7 +528,6 @@ void display()
 
         MoveView();
 
-        //将模型三作为光照参照点
         models[8].translate = shadowCamera.position + glm::vec3(0, 0, 2);
         //阴影渲染
         glUseProgram(ShadowRender);
@@ -405,7 +548,7 @@ void display()
                     continue;
                 else if (m.id == 10 && Istai == true)
                     continue;
-                else if (m.id == 11 && Isball == true)
+                else if (m.id == 21 && Isball == true)
                     continue;
                 else m.draw(ModelRender);
             }
@@ -456,37 +599,56 @@ void display()
                     continue;
                 else if (m.id == 10 && Istai == true)
                     continue;
-                else if (m.id == 11 && Isball == true)
+                else if (m.id == 21 && Isball == true)
                     continue;
                 else m.draw(ModelRender);
             }
         }
           
+        if (Iscubic != true)
+            models.pop_back();
+        if (Istai != true)
+            models.pop_back();
+        if (Isball != true)
+            models.pop_back();
         {
-            ImGui::Text("This is debug window for application");
-            ImGui::SliderFloat("LightX", &shadowCamera.position.x, 0.0f, 15.0f);
-            ImGui::SliderFloat("LightY", &shadowCamera.position.y, 0.0f, 15.0f);
-            ImGui::SliderFloat("LightZ", &shadowCamera.position.z, 0.0f, 15.0f);
-            ImGui::ColorEdit3("Light color", (float*)&lightColor);
+            ImGui::Text("This is control window for application");
+            ImGui::SliderFloat("Camera Speed", &cameraSpeed, 0.3f, 0.9f);
+
+            ImGui::RadioButton("FlyingMode", &Isfly, 0);ImGui::SameLine();
+            ImGui::RadioButton("WalkingMode", &Isfly, 1);
+            ImGui::SliderFloat("LightX", &shadowCamera.position.x, -200.0f, 200.0f);
+            ImGui::SliderFloat("LightY", &shadowCamera.position.y, -60.0f, 60.0f);
+            ImGui::SliderFloat("LightZ", &shadowCamera.position.z, -200.0f, 200.0f);
+            ImGui::ColorEdit3("Environment Light color", (float*)&lightColor);
             ImGui::Checkbox("Goal", &Isgoal);
             ImGui::Checkbox("Cubic", &Iscubic);
-            ImGui::SliderFloat("rotate1x", &rotate1.x, -90, 90);
-            ImGui::SliderFloat("rotate1y", &rotate1.y, -90, 90);
-            ImGui::SliderFloat("rotate1z", &rotate1.z, -90, 90);
-            ImGui::SliderFloat("scale1x", &scale1.x, 0.5, 3);
-            ImGui::SliderFloat("scale1y", &scale1.y, 0.5, 3);
-            ImGui::SliderFloat("scale1z", &scale1.z, 0.5, 3);            
-            ImGui::Checkbox("Tai", &Istai);
-            ImGui::SliderFloat("rotate2x", &rotate2.x, -90, 90);
-            ImGui::SliderFloat("rotate2y", &rotate2.y, -90, 90);
-            ImGui::SliderFloat("rotate2z", &rotate2.z, -90, 90);
-            ImGui::SliderFloat("scale2x", &scale2.x, 0.5, 3);
-            ImGui::SliderFloat("scale2y", &scale2.y, 0.5, 3);
-            ImGui::SliderFloat("scale2z", &scale2.z, 0.5, 3);
+            ImGui::SliderFloat("cubicx", &rotate1.x, -90, 90);
+            ImGui::SliderFloat("cubicy", &rotate1.y, -90, 90);
+            ImGui::SliderFloat("cubicz", &rotate1.z, -90, 90);
+            ImGui::SliderFloat("scalex1", &scale1.x, 0.5, 3);
+            ImGui::SliderFloat("scaley1", &scale1.y, 0.5, 3);
+            ImGui::SliderFloat("scalez1", &scale1.z, 0.5, 3);
+            ImGui::Checkbox("Tai", &Istai);            
+            ImGui::SliderFloat("taix", &rotate2.x, -90, 90);
+            ImGui::SliderFloat("taiy", &rotate2.y, -90, 90);
+            ImGui::SliderFloat("taiz", &rotate2.z, -90, 90);
+            ImGui::SliderFloat("scalex2", &scale2.x, 0.5, 3);
+            ImGui::SliderFloat("scaley2", &scale2.y, 0.5, 3);
+            ImGui::SliderFloat("scalez2", &scale2.z, 0.5, 3);
+            ImGui::Checkbox("Ball", &Isball);             
+            ImGui::SliderFloat("ballx", &rotate3.x, -90, 90);
+            ImGui::SliderFloat("bally", &rotate3.y, -90, 90);
+            ImGui::SliderFloat("ballz", &rotate3.z, -90, 90);
+            ImGui::SliderFloat("scalex3", &scale3.x, 0.1, 0.5);
+            ImGui::SliderFloat("scaley3", &scale3.y, 0.1, 0.5);
+            ImGui::SliderFloat("scalez3", &scale3.z, 0.1, 0.5);
+            
 
-            ImGui::Checkbox("Ball", &Isball);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Text("pitch:",camera.pitch, "yaw:",camera.yaw,"roll:", camera.roll);
+            ImGui::Text("pitch: %.3f", camera.pitch); ImGui::SameLine();
+            ImGui::Text("yaw: %.3f", camera.yaw);ImGui::SameLine();
+            ImGui::Text("roll: %.3f", camera.roll);
         }
 
         ImGui::Render();
@@ -494,74 +656,78 @@ void display()
 
 
         glfwSwapBuffers(m_Window);  //双缓冲   
-        models.pop_back();
-        models.pop_back();
+        idle();
+
     }
 }
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-        for (int i = 0; i < models.size(); i++)
+    if (xpos > 700 || ypos > 700)
+    {
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+            for (int i = 0; i < models.size(); i++)
+            {
+                glGetIntegerv(GL_VIEWPORT, viewport);
+                glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+                glGetDoublev(GL_PROJECTION_MATRIX, projection);
+                glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+                glm::mat4x4 model;
+                for (int j = 0; j < 4; j++)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        model[j][i] = modelview[4 * j + i];
+                    }
+                }
+                glm::mat4x4 pro;
+                for (int j = 0; j < 4; j++)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        pro[j][i] = projection[4 * j + i];
+                    }
+                }
+                glm::vec4 view;
+                for (int j = 0; j < 4; j++)
+                {
+                    view[j] = viewport[j];
+                }
+                glm::vec3 win(xpos, viewport[3] - ypos, z);
+                glm::vec3 trans = glm::unProject(win, model, pro, view);
+                poix = trans.x;
+                poiy = trans.y;
+                poiz = trans.z;
+                if (poix + camera.position.x <= models[i].maxX * camera.fovy / 70 && poix + camera.position.x >= models[i].minX * camera.fovy / 70 && poiy + camera.position.y <= models[i].maxY * camera.fovy / 70 && poiy + camera.position.y >= models[i].minY * camera.fovy / 70) {
+                    if (i != 4 && i != 8) {
+                        //cout << i << endl;
+                        models[i].show = !models[i].show;
+                    }
+                }
+
+            }
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
         {
-            glGetIntegerv(GL_VIEWPORT, viewport);
-            glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-            glGetDoublev(GL_PROJECTION_MATRIX, projection);
-            glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
-            glm::mat4x4 model;
-            for (int j = 0; j < 4; j++)
-            {
-              for (int i = 0; i < 4; i++)
-                {
-                    model[j][i] = modelview[4*j + i];
-                }
-            }
-            glm::mat4x4 pro;
-            for (int j = 0; j < 4; j++)
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    pro[j][i] = projection[4 * j + i];
-                }
-            }
-            glm::vec4 view;
-            for (int j = 0; j < 4; j++)
-            {
-                view[j] = viewport[j];
-            }
-            glm::vec3 win(xpos, viewport[3] - ypos, z);
-            glm::vec3 trans = glm::unProject(win, model, pro, view);
-            poix = trans.x;
-            poiy = trans.y;
-            poiz = trans.z;
-            if (poix + camera.position.x <= models[i].maxX * camera.fovy / 70 && poix + camera.position.x >= models[i].minX * camera.fovy / 70 && poiy + camera.position.y <= models[i].maxY * camera.fovy / 70 && poiy + camera.position.y >= models[i].minY * camera.fovy / 70) {
-                if (i != 4 && i != 8) {
-                    //cout << i << endl;
-                    models[i].show = !models[i].show;
-                }
-            }
-
+            firstMouse = true;
+            return;
         }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-    {
-        firstMouse = true;
-        return;
+
+        if (firstMouse)
+        {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+
+        camera.yaw += 10 * (xpos - lastX) / WindowWidth;
+        camera.yaw = glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f;
+        //movMatrix += glm::vec3(cos(glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f),0,-sin(glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f));
+
+        camera.pitch += -10 * (ypos - lastY) / WindowHeight;
+        camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
     }
-
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    camera.yaw += 10 * (xpos - lastX) / WindowWidth;
-    camera.yaw = glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f;
-    //movMatrix += glm::vec3(cos(glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f),0,-sin(glm::mod(camera.yaw + 180.0f, 360.0f) - 180.0f));
-
-    camera.pitch += -10 * (ypos - lastY) / WindowHeight;
-    camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
+   
         
 }
 
