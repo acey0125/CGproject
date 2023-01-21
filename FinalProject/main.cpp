@@ -69,7 +69,8 @@ float lastX = 0, lastY = 0;
 int shadowMapResolution = 1024;   
 float cameraSpeed = 0.5f;
 float upspeed = 0.0f;
-float downspeed = -1.0f;
+float downspeed = -1.5f;
+float jump = 6.0f;
 int vcounter = 0;
 int counter0 = 0;
 int counter1 = 0;
@@ -170,7 +171,8 @@ void MoveView()
     }
     if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        upspeed = 5.0f;
+        if (upspeed == 0)
+            upspeed = jump;
     }
     //相机位置
     if (glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS)
@@ -199,14 +201,26 @@ void MoveView()
 
     if (glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS)
     {
-        camera.position.y += cameraSpeed;
-        movMatrix.y += cameraSpeed;
+        if (Isfly == 1) {
+            cout << "WalkingMode can't fly!" << endl;
+        }
+        else
+        {
+            camera.position.y += cameraSpeed;
+            movMatrix.y += cameraSpeed;
+        }
     }
 
     if (glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS)
     {
-        camera.position.y -= cameraSpeed;
-        movMatrix.y -= cameraSpeed;
+        if (Isfly == 1) {
+            cout << "WalkingMode can't fly!" << endl;
+        }
+        else
+        {
+            camera.position.y -= cameraSpeed;
+            movMatrix.y -= cameraSpeed;
+        }
     }
 
     //光源位置
@@ -465,17 +479,21 @@ void Initialization()
     glEnable(GL_DEPTH_TEST);  
 }
 
-
+float allspeed;
 void display()
 {
     while (!glfwWindowShouldClose(m_Window))
     {
         if (Isfly == 1)
         {
-            float allspeed = upspeed + downspeed;
+            allspeed = upspeed + downspeed;
             camera.position.y += allspeed;
             if (upspeed > 0)
-                upspeed -= 1.5f;
+                upspeed -= 1.0f;
+            else if (upspeed < 0)
+            {
+                upspeed = 0.0f;
+            }
             if (camera.position.y < 5)
                 camera.position.y = 5;
        }
