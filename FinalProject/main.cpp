@@ -17,26 +17,26 @@ Final project for computer graphics class 2022 autumn
 #define WindowHeight 1500
 #define BITMAP_ID 0x4D42
 using namespace std;
-//»ù±¾Ä£ĞÍ»æÖÆ
+//åŸºæœ¬æ¨¡å‹ç»˜åˆ¶
 Model box;
 GLuint boxTexture;
 
 
-//Ä£ĞÍÊı×éÓëÌì¿ÕºĞ
+//æ¨¡å‹æ•°ç»„ä¸å¤©ç©ºç›’
 vector<Model> models;  
 Model skybox; 
 
 
-//×ÅÉ«Æ÷³ÌĞò
+//ç€è‰²å™¨ç¨‹åº
 GLuint ModelRender;
 GLuint ShadowRender;
 GLuint SkyBoxRender; 
 
-//Ìì¿ÕºĞÎÆÀíÓëÒõÓ°ÎÆÀí
+//å¤©ç©ºç›’çº¹ç†ä¸é˜´å½±çº¹ç†
 GLuint skyboxTexture;   
 GLuint shadowTexture;  
 
-//Ïà»ú
+//ç›¸æœº
 Camera camera;      
 Camera shadowCamera;  
 GLFWwindow* m_Window;
@@ -75,39 +75,39 @@ int vcounter = 0;
 int counter0 = 0;
 int counter1 = 0;
 int counter2 = 0;
-GLuint shadowMapFBO;//Ö¡»º³å
+GLuint shadowMapFBO;//å¸§ç¼“å†²
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
-// Êó±ê¹öÂÖº¯Êı
+// é¼ æ ‡æ»šè½®å‡½æ•°
 void mouseWheel(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.fovy -= xoffset;
 }
 bool SnapScreen(int width, int height, const char* file)
 {
-    unsigned char* image;          //½ÓÊÜÍ¼ÏñÊı¾İ
-    FILE* fp;             //ÎÄ¼şÖ¸Õë
-    BITMAPFILEHEADER FileHeader;     //½ÓÊÜÎ»Í¼ÎÄ¼şÍ·
-    BITMAPINFOHEADER InfoHeader;     //½ÓÊÜÎ»Í¼ĞÅÏ¢Í·
+    unsigned char* image;          //æ¥å—å›¾åƒæ•°æ®
+    FILE* fp;             //æ–‡ä»¶æŒ‡é’ˆ
+    BITMAPFILEHEADER FileHeader;     //æ¥å—ä½å›¾æ–‡ä»¶å¤´
+    BITMAPINFOHEADER InfoHeader;     //æ¥å—ä½å›¾ä¿¡æ¯å¤´
 
-    FileHeader.bfType = BITMAP_ID;                                                  //IDÉèÖÃÎªÎ»Í¼µÄidºÅ
-    FileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);       //Êµ¼ÊÍ¼ÏñÊı¾İµÄÎ»ÖÃÔÚÎÄ¼şÍ·ºÍĞÅÏ¢Í·Ö®ºó
-    FileHeader.bfReserved1 = 0;                                                     //±ØĞëÉèÖÃÎª0
-    FileHeader.bfReserved2 = 0;                                                     //±ØĞëÉèÖÃÎª0
-    FileHeader.bfSize = height * width * 24 + FileHeader.bfOffBits;                       //BMPÍ¼ÏñÎÄ¼ş´óĞ¡
+    FileHeader.bfType = BITMAP_ID;                                                  //IDè®¾ç½®ä¸ºä½å›¾çš„idå·
+    FileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);       //å®é™…å›¾åƒæ•°æ®çš„ä½ç½®åœ¨æ–‡ä»¶å¤´å’Œä¿¡æ¯å¤´ä¹‹å
+    FileHeader.bfReserved1 = 0;                                                     //å¿…é¡»è®¾ç½®ä¸º0
+    FileHeader.bfReserved2 = 0;                                                     //å¿…é¡»è®¾ç½®ä¸º0
+    FileHeader.bfSize = height * width * 24 + FileHeader.bfOffBits;                       //BMPå›¾åƒæ–‡ä»¶å¤§å°
 
-    InfoHeader.biXPelsPerMeter = 0;                                               //Ë®Æ½·Ö±æÂÊ£¬ÕâÀïÔİÊ±ÉèÎª0¾ÍÊÇ
-    InfoHeader.biYPelsPerMeter = 0;                                               //´¹Ö±·Ö±æÂÊ£¬ÕâÀïÔİÊ±ÉèÎª0¾ÍÊÇ
-    InfoHeader.biClrUsed = 0;                                                     //Í¼ÏñÊ¹ÓÃµÄÑÕÉ«£¬ÕâÀïÔİÊ±ÉèÎª0¾ÍÊÇ
-    InfoHeader.biClrImportant = 0;                                                //ÖØÒªµÄÑÕÉ«Êı£¬ÕâÀïÔİÊ±ÉèÎª0¾ÍÊÇ                         //´¹Ö±·Ö±æÂÊ£¬ÕâÀïÔİÊ±ÉèÎª0¾ÍÊÇ
-    InfoHeader.biPlanes = 1;														  //±ØĞëÉèÖÃÎª1
-    InfoHeader.biCompression = BI_RGB;                                              //ÉèÖÃÎªBI_RGBÊ±,±íÊ¾Í¼Ïñ²¢Ã»ÓĞ²ÊÉ«±í
-    InfoHeader.biBitCount = 24;                                                     //Í¼ÏñµÄÎ»Êı
-    InfoHeader.biSize = sizeof(BITMAPINFOHEADER);                                   //½á¹¹ÌåµÄ´óĞ¡
+    InfoHeader.biXPelsPerMeter = 0;                                               //æ°´å¹³åˆ†è¾¨ç‡ï¼Œè¿™é‡Œæš‚æ—¶è®¾ä¸º0å°±æ˜¯
+    InfoHeader.biYPelsPerMeter = 0;                                               //å‚ç›´åˆ†è¾¨ç‡ï¼Œè¿™é‡Œæš‚æ—¶è®¾ä¸º0å°±æ˜¯
+    InfoHeader.biClrUsed = 0;                                                     //å›¾åƒä½¿ç”¨çš„é¢œè‰²ï¼Œè¿™é‡Œæš‚æ—¶è®¾ä¸º0å°±æ˜¯
+    InfoHeader.biClrImportant = 0;                                                //é‡è¦çš„é¢œè‰²æ•°ï¼Œè¿™é‡Œæš‚æ—¶è®¾ä¸º0å°±æ˜¯                         //å‚ç›´åˆ†è¾¨ç‡ï¼Œè¿™é‡Œæš‚æ—¶è®¾ä¸º0å°±æ˜¯
+    InfoHeader.biPlanes = 1;														  //å¿…é¡»è®¾ç½®ä¸º1
+    InfoHeader.biCompression = BI_RGB;                                              //è®¾ç½®ä¸ºBI_RGBæ—¶,è¡¨ç¤ºå›¾åƒå¹¶æ²¡æœ‰å½©è‰²è¡¨
+    InfoHeader.biBitCount = 24;                                                     //å›¾åƒçš„ä½æ•°
+    InfoHeader.biSize = sizeof(BITMAPINFOHEADER);                                   //ç»“æ„ä½“çš„å¤§å°
     InfoHeader.biHeight = height;
     InfoHeader.biWidth = width;
     InfoHeader.biSizeImage = height * width * 4;
@@ -119,9 +119,9 @@ bool SnapScreen(int width, int height, const char* file)
         printf("Exception: No enough space!\n");
         return false;
     }
-    //ÏñËØ¸ñÊ½ÉèÖÃ4×Ö½Ú¶ÔÆë
+    //åƒç´ æ ¼å¼è®¾ç½®4å­—èŠ‚å¯¹é½
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    //½ÓÊÕ³öÏñËØµÄÊı¾İ
+    //æ¥æ”¶å‡ºåƒç´ çš„æ•°æ®
     glReadPixels(0, 0, width, height, GL_BGR_EXT, GL_UNSIGNED_BYTE, image);
 
     fp = fopen(file, "wb");
@@ -141,16 +141,16 @@ bool SnapScreen(int width, int height, const char* file)
 VideoRecorder recorder;
 void idle() {
     if (!isRecordOver && isRecording)
-    {// ¿ªÊ¼Â¼Ïñ
+    {// å¼€å§‹å½•åƒ
         isRecordOver = isRecording;
         recorder.RecordInit(60, WindowWidth, WindowHeight, "record.mp4");
     }
     else if (isRecordOver && isRecording)
-    {// Â¼Ïñ
+    {// å½•åƒ
         recorder.GrabFrame();
     }
     else if (isRecordOver && !isRecording)
-    {// ½áÊøÂ¼Ïñ
+    {// ç»“æŸå½•åƒ
         isRecordOver = isRecording;
         recorder.Finish();
     }
@@ -171,10 +171,10 @@ void MoveView()
     }
     if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        if (upspeed == 0)
+        if(upspeed==0)
             upspeed = jump;
     }
-    //Ïà»úÎ»ÖÃ
+    //ç›¸æœºä½ç½®
     if (glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS)
     {
         camera.position += cameraSpeed * camera.direction;
@@ -223,7 +223,7 @@ void MoveView()
         }
     }
 
-    //¹âÔ´Î»ÖÃ
+    //å…‰æºä½ç½®
     if (glfwGetKey(m_Window, GLFW_KEY_J) == GLFW_PRESS)
         shadowCamera.position.x += cameraSpeed;
     if (glfwGetKey(m_Window, GLFW_KEY_L) == GLFW_PRESS)
@@ -275,19 +275,19 @@ void MoveView()
 
 void Initialization()
 {
-    // Éú³É×ÅÉ«Æ÷³ÌĞò¶ÔÏó
+    // ç”Ÿæˆç€è‰²å™¨ç¨‹åºå¯¹è±¡
     ModelRender = getShaderProgram("shaders/fshader.fsh", "shaders/vshader.vsh");
     ShadowRender = getShaderProgram("shaders/shadow.fsh", "shaders/shadow.vsh");
     SkyBoxRender = getShaderProgram("shaders/skybox.fsh", "shaders/skybox.vsh");
 
-    //Ê÷1-0
+    //æ ‘1-0
     Model tree1 = Model(0);
     tree1.translate = glm::vec3(2.5, -0.4, 2);
     tree1.scale = glm::vec3(0.0025, 0.0025, 0.0025);
     tree1.load("models/tree/tree02.obj");
     tree1.Change(0.0025, 0.0025, 0.0025, 2.5, -0.4, 2);
     models.push_back(tree1);
-    //Ê÷2-1
+    //æ ‘2-1
     Model tree2 = Model(1);
     tree2.translate = glm::vec3(2.5, -0.4, 2);
     tree2.scale = glm::vec3(0.0025, 0.0025, 0.0025);
@@ -295,14 +295,14 @@ void Initialization()
     tree2.Change(0.0025, 0.0025, 0.0025, 2.5, -0.4, 2);
     tree2.show = false;
     models.push_back(tree2);
-    //Ê÷3-2
+    //æ ‘3-2
     Model tree3 = Model(2);
     tree3.translate = glm::vec3(10, -0.4, 7);
     tree3.scale = glm::vec3(0.0015, 0.0015, 0.0015);
     tree3.load("models/tree/tree02.obj");
     tree3.Change(0.0015, 0.0015, 0.0015, 10, -0.4, 7);
     models.push_back(tree3);
-    //Ê÷4-3
+    //æ ‘4-3
     Model tree4 = Model(3);
     tree4.translate = glm::vec3(10, -0.4, 7);
     tree4.scale = glm::vec3(0.0015, 0.0015, 0.0015);
@@ -310,14 +310,14 @@ void Initialization()
     tree4.Change(0.0015, 0.0015, 0.0015, 10, -0.4, 7);
     tree4.show = false;
     models.push_back(tree4);
-    //µØÃæ-4
+    //åœ°é¢-4
     Model plane = Model(4);
     plane.translate = glm::vec3(0, -8.4, 0);
     plane.scale = glm::vec3(1, 1, 1);
     plane.rotate = glm::vec3(0, 0, 0);
     plane.load("models/ground/grass.obj");
     models.push_back(plane);
-    //ÇòÃÅ
+    //çƒé—¨
     Model goal = Model(5);
     goal.translate = glm::vec3(2.5, 0, 0);
     goal.rotate = glm::vec3(-90, 0, 90);
@@ -326,7 +326,7 @@ void Initialization()
     goal.load("models/goal/goal/goal.obj");
     models.push_back(goal);
 
-    //Ê÷-6
+    //æ ‘-6
     Model tree = Model(6);
     tree.translate = glm::vec3(18, 0, 15);
     tree.scale = glm::vec3(0.01, 0.01, 0.01);
@@ -334,7 +334,7 @@ void Initialization()
     tree.Change(0.01, 0.01, 0.01, 18, 0, 15);
     models.push_back(tree);
 
-    //»¹ÊÇÊ÷-7
+    //è¿˜æ˜¯æ ‘-7
     Model trees = Model(7);
     trees.translate = glm::vec3(18, 0, 15);
     trees.scale = glm::vec3(0.01, 0.01, 0.01);
@@ -344,7 +344,7 @@ void Initialization()
     models.push_back(trees);
 
 
-    // ¹âÔ´±êÖ¾
+    // å…‰æºæ ‡å¿—
     Model vlight = Model(8);
     vlight.translate = glm::vec3(1, 0, -1);
     vlight.rotate = glm::vec3(225, 0, 0);
@@ -352,28 +352,28 @@ void Initialization()
     vlight.load("models/camera/Sun.obj");
     models.push_back(vlight);
 
-    //½¨Öş1
+    //å»ºç­‘1
     Model b1 = Model(11);
     b1.translate = glm::vec3(0, 0, 45);
     b1.scale = glm::vec3(0.8, 0.8, 0.8);
     b1.load("models/building-obj/obj/Residential Buildings 004.obj");
     b1.show = true;
     models.push_back(b1);
-    //½¨Öş2
+    //å»ºç­‘2
     Model b2 = Model(12);
     b2.translate = glm::vec3(20, 0, 45);
     b2.scale = glm::vec3(0.8, 0.8, 0.8);
     b2.load("models/building-obj/obj/Residential Buildings 010.obj");
     b2.show = true;
     models.push_back(b2);
-    //½¨Öş3
+    //å»ºç­‘3
     Model b3 = Model(13);
     b3.translate = glm::vec3(-20, 0, 45);
     b3.scale = glm::vec3(0.8, 0.8, 0.8);
     b3.load("models/building-obj/obj/Residential Buildings 003.obj");
     b3.show = true;
     models.push_back(b3);
-    //½¨Öş4
+    //å»ºç­‘4
     Model b4 = Model(14);
     b4.translate = glm::vec3(20, 1.5, 90);
     b4.scale = glm::vec3(0.8, 0.8, 0.8);
@@ -381,7 +381,7 @@ void Initialization()
     b4.show = true;
     models.push_back(b4);
 
-    //½¨Öş5
+    //å»ºç­‘5
     Model b5 = Model(15);
     b5.translate = glm::vec3(0, 1.5, 90);
     b5.scale = glm::vec3(0.8, 0.8, 0.8);
@@ -389,7 +389,7 @@ void Initialization()
     b5.show = true;
     models.push_back(b5);
 
-    //½¨Öş6
+    //å»ºç­‘6
     Model b6 = Model(16);
     b6.translate = glm::vec3(-20, 0.5, 90);
     b6.scale = glm::vec3(0.8, 0.8, 0.8);
@@ -397,43 +397,45 @@ void Initialization()
     b6.show = true;
     models.push_back(b6);
 
-    //ÍâÈ¦Ê÷1
+    //å¤–åœˆæ ‘1
     Model ltree1 = Model(17);
     ltree1.translate = glm::vec3(30, -0.4, 50);
     ltree1.scale = glm::vec3(0.0025, 0.0025, 0.0025);
     ltree1.load("models/tree/tree02.obj");
     models.push_back(ltree1);
 
-    //ÍâÈ¦Ê÷2
+    //å¤–åœˆæ ‘2
     Model rtree1 = Model(18);
     rtree1.translate = glm::vec3(-30, -0.4, 50);
     rtree1.scale = glm::vec3(0.0025, 0.0025, 0.0025);
     rtree1.load("models/tree/tree02.obj");
     models.push_back(rtree1);
 
-    //Ö²Îï1
+    //æ¤ç‰©1
     Model plant1 = Model(19);
     plant1.translate = glm::vec3(10, 0, 90);
     plant1.scale = glm::vec3(0.015, 0.015, 0.015);
     plant1.load("models/plant/3d-model.obj");
     models.push_back(plant1);
 
-    //Ö²Îï2
+    //æ¤ç‰©2
     Model plant2 = Model(20);
     plant2.translate = glm::vec3(-10, 1, 90);
     plant2.scale = glm::vec3(0.5, 0.5, 0.5);
     plant2.load("models/plant/indoor plant_02.obj");
     models.push_back(plant2);
 
-    ////³µ
+    ////è½¦
     Model car = Model(22);
     car.rotate = glm::vec3(0, 90, 0);
     car.translate = glm::vec3(20, 0, 20);
     car.scale = glm::vec3(2.0, 2.0, 2.0);
+    car.Change(2, 2, 2, 20, 0, 20);
+    
     car.load("models/car/car.obj");
     models.push_back(car);
 
-    //Ìì¿ÕºĞÕı·½Ìå
+    //å¤©ç©ºç›’æ­£æ–¹ä½“
     Mesh cube;
     cube.vertexPosition = { 
         glm::vec3(-1, -1, -1),glm::vec3(1, -1, -1),glm::vec3(-1, 1, -1),glm::vec3(1, 1, -1),
@@ -443,7 +445,7 @@ void Initialization()
     cube.bindData();
     skybox.meshes.push_back(cube);
 
-    //Á¢·½ÌåÌùÍ¼
+    //ç«‹æ–¹ä½“è´´å›¾
     vector<const GLchar*> faces;
     faces.push_back("skybox/right.jpg");
     faces.push_back("skybox/left.jpg");
@@ -453,7 +455,7 @@ void Initialization()
     faces.push_back("skybox/front.jpg");
     skyboxTexture = TextureMap(faces);
 
-    //¹âÔ´Í¶Ó°
+    //å…‰æºæŠ•å½±
     shadowCamera.left = -20;
     shadowCamera.right = 20;
     shadowCamera.bottom = -20;
@@ -461,7 +463,7 @@ void Initialization()
     shadowCamera.position = glm::vec3(0, 45, 15);
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glGenFramebuffers(1, &shadowMapFBO);
-    //ÒõÓ°ÎÆÀí
+    //é˜´å½±çº¹ç†
     glGenTextures(1, &shadowTexture);
     glBindTexture(GL_TEXTURE_2D, shadowTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapResolution, shadowMapResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -469,13 +471,13 @@ void Initialization()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // ÒõÓ°ÎÆÀí°ó¶¨µ½Ö¡»º³å
+    // é˜´å½±çº¹ç†ç»‘å®šåˆ°å¸§ç¼“å†²
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTexture, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //¿ªÆôÉî¶È²âÊÔ
+    //å¼€å¯æ·±åº¦æµ‹è¯•
     glEnable(GL_DEPTH_TEST);  
 }
 
@@ -490,12 +492,12 @@ void display()
             camera.position.y += allspeed;
             if (upspeed > 0)
                 upspeed -= 1.0f;
-            else if (upspeed < 0)
+            else if(upspeed < 0)
             {
                 upspeed = 0.0f;
             }
-            if (camera.position.y < 5)
-                camera.position.y = 5;
+            if (camera.position.y < 5)camera.position.y = 5;
+                
        }
         else
         {
@@ -513,7 +515,6 @@ void display()
             models.push_back(cube);
         }
 
-
         Model tai = Model(10);
         if (Istai == true)
             tmpMatrix = movMatrix;
@@ -525,7 +526,6 @@ void display()
             tai.load("models/basic/tai.obj");
             models.push_back(tai);
         }
-
 
         Model ball = Model(21);
         if (Isball == true)
@@ -539,15 +539,12 @@ void display()
             models.push_back(ball);
         }
 
-
-
         glfwPollEvents();    
         ImGui_ImplGlfwGL3_NewFrame();
 
         MoveView();
-
         models[8].translate = shadowCamera.position + glm::vec3(0, 0, 2);
-        //ÒõÓ°äÖÈ¾
+        //é˜´å½±æ¸²æŸ“
         glUseProgram(ShadowRender);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -572,41 +569,41 @@ void display()
             }
         }
 
-        //Ìì¿ÕºĞäÖÈ¾
+        //å¤©ç©ºç›’æ¸²æŸ“
         glUseProgram(SkyBoxRender);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, WindowWidth, WindowHeight);
         glUniformMatrix4fv(glGetUniformLocation(SkyBoxRender, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix(true)));
         glUniformMatrix4fv(glGetUniformLocation(SkyBoxRender, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix(true)));
-        //Ìì¿ÕºĞÎÆÀí
+        //å¤©ç©ºç›’çº¹ç†
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
         glUniform1i(glGetUniformLocation(SkyBoxRender, "skybox"), 1);
         skybox.translate = camera.position;
-        //¹Ø±ÕÉî¶È
+        //å…³é—­æ·±åº¦
         glDepthMask(GL_FALSE);
         skybox.draw(SkyBoxRender);
         glDepthMask(GL_TRUE);
 
-        //Ö÷äÖÈ¾
+        //ä¸»æ¸²æŸ“
         glUseProgram(ModelRender);
         glUniformMatrix4fv(glGetUniformLocation(ModelRender, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix(true)));
         glUniformMatrix4fv(glGetUniformLocation(ModelRender, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix(true)));
         glm::mat4 shadowVP = shadowCamera.getProjectionMatrix(false) * shadowCamera.getViewMatrix(false);
         glUniformMatrix4fv(glGetUniformLocation(ModelRender, "shadowVP"), 1, GL_FALSE, glm::value_ptr(shadowVP));
-        //´«ÈëÎÆÀí
+        //ä¼ å…¥çº¹ç†
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, shadowTexture);
         glUniform1i(glGetUniformLocation(ModelRender, "shadowtex"), 1);
 
-        //¹âÔ´Î»ÖÃ
+        //å…‰æºä½ç½®
         glUniform3fv(glGetUniformLocation(ModelRender, "lightPos"), 1, glm::value_ptr(shadowCamera.position));
-        //Ïà»úÎ»ÖÃ
+        //ç›¸æœºä½ç½®
         glUniform3fv(glGetUniformLocation(ModelRender, "cameraPos"), 1, glm::value_ptr(camera.position));
-        //¹âÔ´ÑÕÉ«
+        //å…‰æºé¢œè‰²
         glUniform3fv(glGetUniformLocation(ModelRender, "lightColor"), 1, glm::value_ptr(lightColor));
-        //»æÖÆ
+        //ç»˜åˆ¶
         for (auto m : models)
         {
             if (m.show)
@@ -632,6 +629,7 @@ void display()
         {
             ImGui::Text("This is control window for application");
             ImGui::SliderFloat("Camera Speed", &cameraSpeed, 0.3f, 0.9f);
+            ImGui::SliderFloat("Jump Height", &jump, 3.0f, 12.0f);
 
             ImGui::RadioButton("FlyingMode", &Isfly, 0);ImGui::SameLine();
             ImGui::RadioButton("WalkingMode", &Isfly, 1);
@@ -661,8 +659,6 @@ void display()
             ImGui::SliderFloat("scalex3", &scale3.x, 0.1, 0.5);
             ImGui::SliderFloat("scaley3", &scale3.y, 0.1, 0.5);
             ImGui::SliderFloat("scalez3", &scale3.z, 0.1, 0.5);
-            
-
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::Text("pitch: %.3f", camera.pitch); ImGui::SameLine();
             ImGui::Text("yaw: %.3f", camera.yaw);ImGui::SameLine();
@@ -672,10 +668,8 @@ void display()
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
-
-        glfwSwapBuffers(m_Window);  //Ë«»º³å   
+        glfwSwapBuffers(m_Window);  //åŒç¼“å†²   
         idle();
-
     }
 }
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
@@ -745,8 +739,6 @@ void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
         camera.pitch += -10 * (ypos - lastY) / WindowHeight;
         camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
     }
-   
-        
 }
 
 int main(int argc, char** argv)
@@ -766,14 +758,12 @@ int main(int argc, char** argv)
     glfwSetFramebufferSizeCallback(m_Window, framebuffer_size_callback);
     glfwSetCursorPosCallback(m_Window, MouseCallback);
     glfwSetScrollCallback(m_Window, mouseWheel);
-
     if (glewInit() != GLEW_OK)
     {
         std::cout << "Error" << std::endl;
     }
 
     Initialization();
-
     ImGui::CreateContext();
     ImGui_ImplGlfwGL3_Init(m_Window, true);
     ImGui::StyleColorsDark();
@@ -782,4 +772,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
